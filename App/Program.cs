@@ -19,7 +19,9 @@ namespace App
         private static extern int BitBlt(IntPtr srchDC, int srcX, int srcY, int srcW, int srcH, IntPtr desthDC, int destX, int destY, int op);
 
         private const int CutOff = (int)(0.78f * 255);
-        private const double GlyphThreshold = 1.35;
+        private static double prevBrightness;
+        private const double BrightnessThreshold = 0.2;
+        private const int RunningFrames = 120;
 
         private const int SRCCOPY = 13369376;
 
@@ -32,13 +34,6 @@ namespace App
 
         private static byte[] rgbValues;
 
-        private enum State
-        {
-            Waiting,
-            Saved,
-        }
-
-        private static State state;
         private static int frame;
         private static int recordFrame;
 
@@ -76,25 +71,16 @@ namespace App
 
             var brightness = (double)whiteCount * 100 / (blackCount + whiteCount);
             Console.WriteLine(brightness);
-            if (brightness > GlyphThreshold)
+            if (Math.Abs(brightness - prevBrightness) > BrightnessThreshold)
             {
-                if (state == State.Waiting)
-                {
-                    bmp.Save($"{recordFrame++}.png");
-                    state = State.Saved;
-                }
+                bmp.Save($"{recordFrame++}_{brightness:0.000}_.png");
             }
-            else
-            {
-                if (state == State.Saved)
-                {
-                    state = State.Waiting;
-                }
-            }
+
+            prevBrightness = brightness;
 
             bmp.Dispose();
 
-            return frame > 200 ? 0 : 1;
+            return frame > RunningFrames ? 0 : 1;
         }
 
         public static void Main(string[] args)
@@ -108,7 +94,6 @@ namespace App
             }
 
             rgbValues = new byte[BytesLength];
-            state = State.Waiting;
             frame = 0;
             recordFrame = 0;
             while (true)
