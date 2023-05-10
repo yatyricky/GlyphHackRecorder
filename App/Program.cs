@@ -71,7 +71,7 @@ namespace App
 
             var brightness = (double)whiteCount * 100 / (blackCount + whiteCount);
             Console.WriteLine(brightness);
-            if (Math.Abs(brightness - prevBrightness) > BrightnessThreshold)
+            if (brightness - prevBrightness > BrightnessThreshold)
             {
                 bmp.Save($"{recordFrame++}_{brightness:0.000}_.png");
             }
